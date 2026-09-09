@@ -1,0 +1,24 @@
+# Words and phrases the current model generation overuses. One entry per
+# line, matched case-insensitively on word boundaries; a space matches any
+# run of whitespace. Blank lines and lines starting with # are ignored.
+#
+# Keep the list small and current. Entries describe the running generation
+# of models and rotate out when the tic does. An entry that no longer fires
+# on fresh drafts is dead weight.
+battle-tested
+blast radius
+caveat
+critical finding
+earn its keep
+earns its keep
+footgun
+landed
+lands
+load-bearing
+mint
+minted
+structurally
+surfaced
+surgical
+the trap
+worth stating plainly
