@@ -98,8 +98,10 @@ Rule families
 **punctuation_glue** (density_only): PG001 em-dash (every U+2014 and spaced
 ``--``; the en-dash is excluded as range typography), PG002 semicolon outside
 an enumerated series or list line, PG003 colon not introducing a list,
-column, or quoted example. Each rule skips a mark whose operands were
-stripped.
+column, or quoted example. An inline list is a remainder with two or more
+commas, and a colon with no whitespace on either side is a path reference
+or clock time. Each rule skips a mark whose operands were stripped. Known
+misfire: a dash pair around a parenthetical.
 
 **contrast_frames** (keep): literal frames for the catalogue's contrast
 patterns. CF001 not-just escalation, CF002 more-than escalation, CF003
@@ -108,6 +110,7 @@ CF006 negative-definition opener ("This is not..."), CF007 do-support
 minimiser ("does not simply describe"), CF008 copular antithesis ("it's not
 X, it's Y"), CF009 not-really restatement, CF010 "not merely". CF007-CF010
 were mined from real LLM drafts rather than derived from the catalogue.
+A match inside a short double-quoted span is a mention and is skipped.
 Misfire class for the whole family: a contrast that corrects a wrong
 assumption the reader actually brings is legitimate, and no regex knows
 that.
@@ -122,7 +125,10 @@ is advisory.
 **importance_theater** (keep): IT001 performative insight ("crucially", "the
 key insight"), IT002 insistence intensifiers ("genuinely", "actually"),
 IT003 performative candour ("honestly", "to be clear"). Whole-word matches
-only, so "actually" is a finding and "factually" is not.
+only, so "actually" is a finding and "factually" is not. IT002 yields to a
+contrast frame that contains the same word ("does not simply retry" is
+CF007 alone). A match inside a short double-quoted span is a mention and
+is skipped; a quoted span over 80 characters stays in scope.
 
 **lexical_tells** (advisory): LX001 word or phrase from
 ``lexical_tells.txt``, a short list of the current model generation's
@@ -177,7 +183,7 @@ from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
-TOOL_VERSION = "1.0.0"
+TOOL_VERSION = "1.2.0"
 
 # Per-family disposition: how far each family's findings are trusted, in
 # declaration order (which is also report order). See the module docstring.
@@ -206,24 +212,24 @@ FAMILY_COUNTED: dict[str, bool] = {
 RULES: dict[str, tuple[str, int, str]] = {
     "PG001": ("punctuation_glue", 2, "em-dash used as a connective"),
     "PG002": ("punctuation_glue", 2, "semicolon outside an enumerated series or list"),
-    "PG003": ("punctuation_glue", 2, "colon not introducing a list, column or quoted example"),
-    "CF001": ("contrast_frames", 1, "not-just escalation"),
-    "CF002": ("contrast_frames", 1, "more-than escalation"),
-    "CF003": ("contrast_frames", 2, "clause-final ', not Y'"),
-    "CF004": ("contrast_frames", 1, "clause-final ', never Y'"),
-    "CF005": ("contrast_frames", 1, "'X rather than Y'"),
-    "CF006": ("contrast_frames", 1, "negative-definition opener"),
-    "CF007": ("contrast_frames", 1, "do-support minimiser ('does not simply V')"),
-    "CF008": ("contrast_frames", 1, "copular antithesis (\"it's not X, it's Y\")"),
-    "CF009": ("contrast_frames", 1, "not-really restatement"),
-    "CF010": ("contrast_frames", 1, "'not merely'"),
+    "PG003": ("punctuation_glue", 4, "colon not introducing a list, column or quoted example"),
+    "CF001": ("contrast_frames", 2, "not-just escalation"),
+    "CF002": ("contrast_frames", 2, "more-than escalation"),
+    "CF003": ("contrast_frames", 3, "clause-final ', not Y'"),
+    "CF004": ("contrast_frames", 2, "clause-final ', never Y'"),
+    "CF005": ("contrast_frames", 2, "'X rather than Y'"),
+    "CF006": ("contrast_frames", 2, "negative-definition opener"),
+    "CF007": ("contrast_frames", 2, "do-support minimiser ('does not simply V')"),
+    "CF008": ("contrast_frames", 2, "copular antithesis (\"it's not X, it's Y\")"),
+    "CF009": ("contrast_frames", 2, "not-really restatement"),
+    "CF010": ("contrast_frames", 2, "'not merely'"),
     "AR001": ("adjacent_repetition", 3, "consecutive sentences share an opener word"),
     "AR002": ("adjacent_repetition", 3, "consecutive sentences share an opener bigram"),
     "AR003": ("adjacent_repetition", 3, "consecutive sentences share a connective"),
     "AR004": ("adjacent_repetition", 3, "consecutive sentences share a punctuation shape"),
-    "IT001": ("importance_theater", 2, "performative-insight frame"),
-    "IT002": ("importance_theater", 2, "insistence intensifier"),
-    "IT003": ("importance_theater", 2, "performative candour"),
+    "IT001": ("importance_theater", 3, "performative-insight frame"),
+    "IT002": ("importance_theater", 4, "insistence intensifier"),
+    "IT003": ("importance_theater", 3, "performative candour"),
     "LX001": ("lexical_tells", 1, "word from the current fashion-vocabulary list"),
     "NG001": ("negation", 1, "density of 'not' (including contractions)"),
     "NG002": ("negation", 1, "density of 'never'"),
@@ -388,6 +394,20 @@ EMDASH_RE = re.compile(r"—|(?<=\s)--(?=\s)")
 # these shapes introduces a quoted example. A module-level constant so a
 # wrapper adding its own quoting notation can extend the pattern.
 COLON_EXAMPLE_PREFIX = re.compile(r"^\s*[\"'“«]")
+
+# A short double-quoted span is a mention, not a use: 'Delete "crucially"
+# wherever it appears' talks about the word. Contrast and importance rules
+# skip a match that starts inside one. The length cap keeps a quoted
+# paragraph of draft text in scope.
+QUOTED_SPAN = re.compile(r"\"[^\"\n]{1,80}\"|“[^”\n]{1,80}”")
+
+
+def quoted_spans(text: str) -> list[tuple[int, int]]:
+    return [(m.start(), m.end()) for m in QUOTED_SPAN.finditer(text)]
+
+
+def _inside(spans: list[tuple[int, int]], offset: int) -> bool:
+    return any(s <= offset < e for s, e in spans)
 
 CONTRAST_PATTERNS: dict[str, re.Pattern[str]] = {
     "CF001": re.compile(
@@ -881,18 +901,41 @@ def punctuation_findings(
                 continue
             if seg.operand_stripped(offset):
                 continue
+            # No whitespace on either side is a path reference or clock
+            # time ("file:line", "10:30"), which is a column, not glue.
+            if offset > 0 and not seg.clean[offset - 1].isspace() and not seg.clean[offset + 1].isspace():
+                continue
+            # Inline-list exemption: the catalogue lets a colon introduce a
+            # list, and "state: trigger, observed behaviour, expected
+            # behaviour" is one. Two commas in the remainder of the sentence
+            # is the proxy. A clause with one comma still counts.
+            if seg.clean[offset + 1 : end].count(",") >= 2:
+                continue
             out.append(_make(doc, seg_index, seg, "PG003", offset, sentences, offset + 1))
     return out
+
+
+def contrast_spans(seg: Segment, sentences: list[tuple[int, int]]) -> list[tuple[int, int]]:
+    """Every contrast-frame match as a (start, end) span in segment offsets."""
+    spans: list[tuple[int, int]] = []
+    for start, end in sentences:
+        sentence = seg.clean[start:end]
+        for pattern in CONTRAST_PATTERNS.values():
+            spans.extend((m.start() + start, m.end() + start) for m in pattern.finditer(sentence))
+    return spans
 
 
 def contrast_findings(
     doc: Document, seg_index: int, seg: Segment, sentences: list[tuple[int, int]]
 ) -> list[Finding]:
     out: list[Finding] = []
+    quoted = quoted_spans(seg.clean)
     for start, end in sentences:
         sentence = seg.clean[start:end]
         for rule_id, pattern in CONTRAST_PATTERNS.items():
             for match in pattern.finditer(sentence):
+                if _inside(quoted, match.start() + start):
+                    continue
                 out.append(
                     _make(
                         doc,
@@ -912,8 +955,17 @@ def importance_findings(
 ) -> list[Finding]:
     out: list[Finding] = []
     families = (("IT001", INSIGHT_RE), ("IT002", INTENSIFIER_RE), ("IT003", CANDOUR_RE))
+    # "does not simply retry" and "is not really latency" are CF007 and
+    # CF009 matches whose own words are intensifiers. The contrast rule
+    # owns them, so IT002 skips a match inside any contrast span.
+    owned = contrast_spans(seg, sentences)
+    quoted = quoted_spans(seg.clean)
     for rule_id, pattern in families:
         for match in pattern.finditer(seg.clean):
+            if _inside(quoted, match.start()):
+                continue
+            if rule_id == "IT002" and any(s <= match.start() < e for s, e in owned):
+                continue
             out.append(
                 _make(doc, seg_index, seg, rule_id, match.start(), sentences, match.end())
             )
