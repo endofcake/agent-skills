@@ -384,6 +384,11 @@ LEXICAL_RE = _load_lexical_tells(LEXICAL_TELLS_FILE)
 # than glue.
 EMDASH_RE = re.compile(r"—|(?<=\s)--(?=\s)")
 
+# PG003's quoted-example exemption: a colon whose remainder opens with one of
+# these shapes introduces a quoted example. A module-level constant so a
+# wrapper adding its own quoting notation can extend the pattern.
+COLON_EXAMPLE_PREFIX = re.compile(r"^\s*[\"'“«]")
+
 CONTRAST_PATTERNS: dict[str, re.Pattern[str]] = {
     "CF001": re.compile(
         r"\b(?:not|isn'?t|aren'?t|wasn'?t|weren'?t|won'?t)\s+just\b"
@@ -475,6 +480,12 @@ class Segment:
     ``raw`` and ``clean`` are the same length: cleaning blanks non-prose
     spans in place rather than deleting them, so an offset into ``clean``
     indexes ``raw`` (and the original file) exactly.
+
+    Subclassing is the extension point for structured inputs (a document
+    assembled from separate fields rather than lines): override ``anchor_at``
+    to emit a custom anchor (include a ``label`` key and the report renders
+    it), and override ``group`` so sentences from different fields are not
+    treated as neighbours.
     """
 
     raw: str
@@ -485,6 +496,11 @@ class Segment:
     def anchor_at(self, offset: int) -> dict[str, Any]:
         line = bisect.bisect_right(self.line_starts, self.abs_start + offset)
         return {"kind": "line", "line": line}
+
+    @property
+    def group(self) -> str:
+        """Sentences compare for adjacent repetition only inside one group."""
+        return ""
 
     def _adjacent_run(self, offset: int, direction: int) -> tuple[int, int] | None:
         """The run of non-space raw characters next to ``offset`` on one side.
@@ -861,7 +877,7 @@ def punctuation_findings(
             # quote may be an emphasis-adjacent curly quote that stripping
             # left alone, and the stripped-operand test below covers a quoted
             # example that stripping blanked.
-            if re.match(r"^\s*[\"'“«]", seg.raw[offset + 1 :]):
+            if COLON_EXAMPLE_PREFIX.match(seg.raw[offset + 1 :]):
                 continue
             if seg.operand_stripped(offset):
                 continue
@@ -948,6 +964,8 @@ def repetition_findings(
     for index in range(1, len(stream)):
         prev_index, prev_seg, prev_start, prev_end = stream[index - 1]
         curr_index, curr_seg, curr_start, curr_end = stream[index]
+        if prev_seg.group != curr_seg.group:
+            continue
         sentences = seg_sentences[curr_index]
         prev = prev_seg.clean[prev_start:prev_end]
         curr = curr_seg.clean[curr_start:curr_end]
@@ -1022,6 +1040,8 @@ def _make(
 
 def negation_findings(doc: Document, words: int) -> list[Finding]:
     """Per-file negation densities. Report-only; single occurrences are not listed."""
+    if not words:
+        return []
     counts = {
         "NG001": ("not", sum(len(NOT_RE.findall(seg.clean)) for seg in doc.segments)),
         "NG002": ("never", sum(len(NEVER_RE.findall(seg.clean)) for seg in doc.segments)),
@@ -1165,6 +1185,8 @@ def build_records(doc: Document, findings: list[Finding], words: int, sentences:
 
 
 def _where(anchor: dict[str, Any]) -> str:
+    if "label" in anchor:
+        return str(anchor["label"])
     if anchor["kind"] == "line":
         return f"line {anchor['line']}"
     return "file"
