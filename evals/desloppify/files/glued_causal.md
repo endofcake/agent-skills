@@ -1,0 +1,1 @@
+The cache is per host; a restart clears it — so the warm-up cost returns after every deploy, and the first requests after a deploy are slow. Rolling restarts spread the cost across the fleet: each host warms while the others serve.

@@ -1,0 +1,137 @@
+{
+  "skill_name": "desloppify",
+  "evals": [
+    {
+      "id": 1,
+      "name": "choreographed-review",
+      "prompt": "Run the desloppify pass on the file. Save the edited text to output.md and the change table to changes.md.",
+      "files": [
+        "files/choreographed_review.md"
+      ],
+      "expected_output": "The two empty endorsements are deleted, the specific agreement in the second paragraph survives, and the three facts keep their order.",
+      "expectations": [
+        "The output does not contain 'Your reasoning on the cache layout is sound'",
+        "The output does not contain 'You have clearly thought hard about eviction'",
+        "The output contains verbatim 'Your estimate includes the warm-up window, so we can compare deploy costs directly.'",
+        "The output mentions four hundred gigabytes, ninety seconds, and least-recently-used, in that order",
+        "The change table names ritual validation or an equivalent as the pattern for the deleted endorsements"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "glued-causal",
+      "prompt": "Run the desloppify pass on the file. Save the edited text to output.md and the change table to changes.md.",
+      "files": [
+        "files/glued_causal.md"
+      ],
+      "expected_output": "The fused sentence is split, the causal link between restart and warm-up cost survives in words, and nothing is added.",
+      "expectations": [
+        "The output contains no semicolon and no em-dash",
+        "The output keeps the causal link between rolling restarts spreading the cost and each host warming while the others serve, with 'because', 'so', or 'since' joining them",
+        "Every content word in the output appears in the input, so no actor, mechanism, or measurement was invented",
+        "The detector's punctuation-glue density on the output is not higher than on the input"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "legitimate-contrast",
+      "prompt": "Run the desloppify pass on the file. Save the edited text to output.md and the change table to changes.md.",
+      "files": [
+        "files/legitimate_contrast.md"
+      ],
+      "expected_output": "The contrast that corrects the per-request assumption is kept and recorded as an exemption.",
+      "expectations": [
+        "The output contains verbatim 'per connection, not per request'",
+        "The change table records an exemption that names the per-request assumption contributors bring"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "slogan-without-context",
+      "prompt": "Run the desloppify pass on the file. Save the edited text to output.md and the change table to changes.md.",
+      "files": [
+        "files/slogan_without_context.md"
+      ],
+      "expected_output": "The slogan cannot be made plain from the supplied text, so it is preserved and recorded as a contextual candidate kept.",
+      "expectations": [
+        "The output contains verbatim 'Every cache is a promise you will forget.'",
+        "The change table records the slogan as preserved for lack of context rather than as an edit"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "mention-versus-use",
+      "prompt": "Run the desloppify pass on the file. Save the edited text to output.md and the change table to changes.md.",
+      "files": [
+        "files/mention_versus_use.md"
+      ],
+      "expected_output": "The quoted examples of banned shapes are mentions, not uses, and stay verbatim.",
+      "expectations": [
+        "The output contains verbatim '\"crucially\"'",
+        "The output contains verbatim '\"the key insight is\"'",
+        "The output contains verbatim '\"it\\'s not X, it\\'s Y\"'"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "specific-agreement-only",
+      "prompt": "Run the desloppify pass on the file. Save the edited text to output.md and the change table to changes.md.",
+      "files": [
+        "files/specific_agreement_only.md"
+      ],
+      "expected_output": "Every opening sentence is specific agreement the argument uses, so nothing is deleted.",
+      "expectations": [
+        "The output contains verbatim 'Your estimate includes the warm-up window, so we can compare deploy costs directly.'",
+        "The output contains verbatim 'Your figure for storage already counts every replica, so the four hundred gigabytes is the cluster total.'",
+        "The output contains verbatim 'Your eviction policy is least-recently-used, which keeps the hottest keys under load.'",
+        "The change table has no deletion of an opening sentence"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "derivable-slogan",
+      "prompt": "Run the desloppify pass on the file. Save the edited text to output.md and the change table to changes.md.",
+      "files": [
+        "files/derivable_slogan.md"
+      ],
+      "expected_output": "The slogan's plain form is stated in the last sentence, so the slogan is rewritten or deleted rather than preserved.",
+      "expectations": [
+        "The output does not contain 'Measure before you cut.'",
+        "The output contains verbatim 'Profile the service first, then remove what the profile shows is idle.'",
+        "The change table records the slogan as an edit, not as a candidate preserved for lack of context"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "object-agency",
+      "prompt": "Run the desloppify pass on the file. Save the edited text to output.md and the change table to changes.md.",
+      "files": [
+        "files/object_agency.md"
+      ],
+      "expected_output": "The two sentences where an object acts are rewritten so that no object says, serves or names anything, and the grammar sentence with the field's literal verbs stays as it is.",
+      "expectations": [
+        "The output does not contain 'Chrome serves'",
+        "The output does not contain 'an absence names'",
+        "The output contains verbatim 'stress falls on the second syllable, and the ending -о marks the nominative case'",
+        "No sentence in the output gives a verb of saying, showing, meaning, wanting or serving to something that is not a person",
+        "No actor, mechanism or measurement absent from the input is added"
+      ]
+    },
+    {
+      "id": 9,
+      "name": "hidden-actions",
+      "prompt": "Run the desloppify pass on the file. Save the edited text to output.md and the change table to changes.md.",
+      "files": [
+        "files/hidden_actions.md"
+      ],
+      "expected_output": "The light-verb and 'through' nominalisations become verbs with a person as subject; the explanation sentence does not turn into an object explaining; the labels for kinds of feedback stay nouns.",
+      "expectations": [
+        "The output does not contain 'make a decision'",
+        "The output does not contain 'through clarity'",
+        "The output contains verbatim 'Praise and reassurance'",
+        "The rewrite of 'The explanation is made of concrete examples' does not make the explanation, an example or any other object explain or show anything",
+        "The detector's nominal density on the output is lower than on the input"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,1 @@
+Most contributors arrive from the Python client, where the retry count is per request, and they expect the same here. In this service the count is per connection, not per request. A connection that fails three times is closed, and the next request opens a new one.

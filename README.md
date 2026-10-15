@@ -43,3 +43,13 @@ cp -R desloppify /path/to/project/.github/skills/desloppify
 VS Code also reads `.claude/skills/` and `.agents/skills/`, and supports personal skill locations. See the [VS Code Agent Skills docs](https://code.visualstudio.com/docs/agent-customization/agent-skills).
 
 A symlink keeps the skill on this repo's latest commit. A copy pins it, and Copilot's cloud agent needs the copy committed to the target repo.
+
+## Development
+
+A skill's folder holds only what an install needs. Each skill's regression tests live in `tests/<skill>/` and its model-judged evals in `evals/<skill>/`, so copying or symlinking the skill leaves them behind. From the repository root:
+
+```bash
+python3 -m unittest discover -s tests/desloppify
+```
+
+[`evals/desloppify/README.md`](evals/desloppify/README.md) explains how the evals run and records their results.

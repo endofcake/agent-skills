@@ -1,0 +1,1 @@
+Interface strings label the parts of the app. Chrome serves an adult operating a tool they chose. On a lesson page with no exercises yet, an absence names the content to come. In the example word окно, stress falls on the second syllable, and the ending -о marks the nominative case.

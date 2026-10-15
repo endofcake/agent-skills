@@ -1,0 +1,1 @@
+Measure before you cut. The last three trims removed code that profiling later showed was on the hot path, and each one was reverted within a week. Profile the service first, then remove what the profile shows is idle.
