@@ -137,11 +137,45 @@ data beside the script: entries rotate out when the tic does, and a missing
 or empty file disables the family. Each word has legitimate uses, which is
 why the family is advisory.
 
+**object_agency** (advisory): AG001 a determiner, at most one modifier, a
+noun for something that is not a person (``AGENT_NOUNS``: text, note, page,
+screen, rule, brief, app…), then a verb of saying, showing, meaning, wanting
+or serving (``AGENT_VERBS``: names, shows, tells, explains, serves,
+carries…). A mass noun (``MASS_AGENT_NOUNS``: chrome, feedback…) also
+matches bare at the start of a sentence. AG002 is the same shape with a noun for an absence
+(``ABSENCE_NOUNS``) or any noun after "empty", where nothing is there to
+act. The verbs a field uses
+literally for its own objects ("stress falls", "the function returns") are
+left off the verb list. Misfires: conventions a register accepts ("Figure 2
+shows", "the spec says"), and a person-noun outside the list is never
+caught. A match inside a short double-quoted span is a mention and is
+skipped.
+
+**copula_avoidance** (advisory): CA001 an inflated verb standing in for
+"is" or "has" ("serves as", "acts as", "stands as", "bears the name").
+Misfire: a literal role ("the host serves as a relay while the primary
+restarts").
+
+**nominalisation** (advisory): NM001 a light verb whose object is a
+verb-derived noun ("make a decision", "provide an explanation"), NM002 a
+nominalisation after "through" or "by means of" ("respected through
+clarity"). Both carry an action in a noun. Misfires: an established term
+("take action", "give permission") and a noun that names a thing rather
+than an act.
+
 **negation** (report_only): NG001 density of "not" (including "n't"
 contractions and "cannot"), NG002 density of "never". Contrast abuse
 concentrates negation, so the input text and the edited text are compared on
 these numbers. Ordinary scoped negation keeps the floor above zero, so no
 threshold is committed to and single occurrences are not listed.
+
+**nominal_density** (report_only): ND001 density of words ending in
+"-tion", "-sion", "-ment", "-ance", "-ence", "-ity" or "-ness" after a stem of
+three or more letters, minus ``NOMINAL_STOPLIST`` (concrete nouns that end
+that way by accident: "document", "sentence"). A pass that turns hidden
+actions back into verbs lowers it, so input and output are compared, as
+with negation. Nominalisations without a suffix ("encounter", "change") are
+not counted, and no threshold is committed to.
 
 **uniformity** (report_only): UM001 sentence-length mean, stddev and
 coefficient of variation; UM002 sentence-opener diversity. Suppressed below
@@ -183,7 +217,7 @@ from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
-TOOL_VERSION = "1.2.0"
+TOOL_VERSION = "1.3.0"
 
 # Per-family disposition: how far each family's findings are trusted, in
 # declaration order (which is also report order). See the module docstring.
@@ -193,7 +227,11 @@ FAMILY_DISPOSITION: dict[str, str] = {
     "adjacent_repetition": "advisory",
     "importance_theater": "keep",
     "lexical_tells": "advisory",
+    "object_agency": "advisory",
+    "copula_avoidance": "advisory",
+    "nominalisation": "advisory",
     "negation": "report_only",
+    "nominal_density": "report_only",
     "uniformity": "report_only",
     "cadence_triads": "report_only",
 }
@@ -231,8 +269,14 @@ RULES: dict[str, tuple[str, int, str]] = {
     "IT002": ("importance_theater", 4, "insistence intensifier"),
     "IT003": ("importance_theater", 3, "performative candour"),
     "LX001": ("lexical_tells", 1, "word from the current fashion-vocabulary list"),
+    "AG001": ("object_agency", 1, "object takes a verb of saying, showing, meaning or wanting"),
+    "AG002": ("object_agency", 1, "an absence takes a verb of saying, showing, meaning or wanting"),
+    "CA001": ("copula_avoidance", 1, "inflated verb in place of 'is' or 'has'"),
+    "NM001": ("nominalisation", 1, "light verb with a nominalised action as its object"),
+    "NM002": ("nominalisation", 1, "nominalisation after 'through' or 'by means of'"),
     "NG001": ("negation", 1, "density of 'not' (including contractions)"),
     "NG002": ("negation", 1, "density of 'never'"),
+    "ND001": ("nominal_density", 1, "density of suffix-derived nominalisations"),
     "UM001": ("uniformity", 1, "sentence-length mean / stddev / coefficient of variation"),
     "UM002": ("uniformity", 1, "sentence-opener diversity"),
     "CT001": ("cadence_triads", 1, "comma-parallel three-item run"),
@@ -338,6 +382,70 @@ CANDOUR_FRAMES = (
     "truth be told",
 )
 
+# AG001/AG002 subjects: things that are not people and that drafts hand
+# verbs of saying, showing, meaning, wanting or serving. AG002 takes the
+# subset that names an absence, where nothing is there to act at all.
+AGENT_NOUNS = (
+    "app", "brief", "button", "card", "chrome", "correction", "course", "data",
+    "design", "doc", "document", "evidence", "example", "explanation",
+    "feedback", "field", "form", "heading", "interface", "label", "lesson",
+    "link", "list", "menu", "message", "note", "page", "paragraph", "prompt",
+    "report", "rule", "screen", "section", "sentence", "skill", "spec",
+    "string", "system", "table", "template", "text", "tool", "verdict",
+)
+ABSENCE_NOUNS = ("absence", "blank", "gap", "silence", "void")
+# Mass nouns that open a sentence without a determiner ("Chrome serves…").
+MASS_AGENT_NOUNS = ("chrome", "data", "evidence", "feedback", "text")
+# Base forms; the third-person singular is derived. Verbs a field uses
+# literally for its own objects ("falls", "marks", "returns") are not here.
+AGENT_VERBS = (
+    "address", "admit", "apologise", "apologize", "argue", "ask", "bring",
+    "carry", "celebrate", "claim", "decide", "deliver", "demand", "describe",
+    "encourage", "expect", "explain", "hide", "identify", "insist", "invite", "know",
+    "mean", "name", "promise", "reassure", "refuse", "remind", "resist",
+    "reveal", "reward", "say", "serve", "show", "speak", "teach", "tell",
+    "trust", "urge", "want", "warn", "welcome",
+)
+AGENT_DETERMINERS = (
+    "a", "an", "any", "each", "every", "its", "our", "that", "the", "their",
+    "this", "your",
+)
+
+# CA001: an inflated verb standing in for "is" or "has".
+COPULA_FRAMES = (
+    "serves as", "serve as", "served as", "serving as",
+    "acts as", "act as", "acted as", "acting as",
+    "stands as", "stand as", "stood as",
+    "functions as", "function as", "functioned as",
+    "bears the name", "bear the name", "bore the name",
+)
+
+# NM001: a light verb whose object is a nominalisation carrying the action
+# ("make a decision", "provide an explanation").
+LIGHT_VERB_FORMS = (
+    "achieve", "achieves", "achieved", "achieving",
+    "carry out", "carries out", "carried out", "carrying out",
+    "conduct", "conducts", "conducted", "conducting",
+    "give", "gives", "gave", "given", "giving",
+    "make", "makes", "made", "making",
+    "offer", "offers", "offered", "offering",
+    "perform", "performs", "performed", "performing",
+    "provide", "provides", "provided", "providing",
+    "reach", "reaches", "reached", "reaching",
+    "take", "takes", "took", "taken", "taking",
+    "undertake", "undertakes", "undertook", "undertaken", "undertaking",
+)
+# ND001 counts derivational suffixes. These words end in one by accident
+# or name concrete things, and are left out of the count.
+NOMINAL_STOPLIST = frozenset(
+    {
+        "audience", "balance", "business", "city", "comment", "commitment", "community",
+        "department", "distance", "document", "element", "entity",
+        "evidence", "experiment", "fragment", "instance", "instrument",
+        "moment", "segment", "sentence", "silence", "station", "university",
+    }
+)
+
 
 def _phrase_pattern(phrases: tuple[str, ...]) -> re.Pattern[str]:
     """Word-boundary alternation over a closed literal phrase list, longest first.
@@ -383,6 +491,70 @@ INSIGHT_RE = _phrase_pattern(INSIGHT_FRAMES)
 INTENSIFIER_RE = _phrase_pattern(INTENSIFIERS)
 CANDOUR_RE = _phrase_pattern(CANDOUR_FRAMES)
 LEXICAL_RE = _load_lexical_tells(LEXICAL_TELLS_FILE)
+COPULA_RE = _phrase_pattern(COPULA_FRAMES)
+
+
+def _third_person(verb: str) -> str:
+    if verb.endswith(("s", "sh", "ch", "x", "z")):
+        return verb + "es"
+    if verb.endswith("y") and verb[-2:-1] not in "aeiou":
+        return verb[:-1] + "ies"
+    return verb + "s"
+
+
+def _agent_pattern(nouns: tuple[str, ...], mass: tuple[str, ...] = ()) -> re.Pattern[str]:
+    """Determiner, at most one modifier, a listed noun, then a listed verb.
+
+    A singular noun takes the third-person form and a plural noun the base
+    form. The modifier slot admits "an empty screen names" and also lets a
+    compound noun through ("the error message tells"). A ``mass`` noun also
+    matches bare at the start of a sentence.
+    """
+    det = "|".join(AGENT_DETERMINERS)
+    noun = "|".join(nouns)
+    singular = "|".join(_third_person(v) for v in AGENT_VERBS)
+    base = "|".join(AGENT_VERBS)
+    body = (
+        rf"(?<![A-Za-z])(?:{det})\s+(?:[A-Za-z][\w'’-]*\s+)?"
+        rf"(?:(?:{noun})\s+(?:{singular})|(?:{noun})s\s+(?:{base}))(?![A-Za-z])"
+    )
+    if mass:
+        body += rf"|(?:^|(?<=[.!?]\s))(?:{'|'.join(mass)})\s+(?:{singular})(?![A-Za-z])"
+    return re.compile(body, re.IGNORECASE | re.MULTILINE)
+
+
+AGENT_RE = _agent_pattern(AGENT_NOUNS, MASS_AGENT_NOUNS)
+ABSENCE_AGENT_RE = _agent_pattern(ABSENCE_NOUNS)
+# Any noun after "empty" names an absence ("an empty space names…").
+EMPTY_AGENT_RE = re.compile(
+    rf"(?<![A-Za-z])(?:{'|'.join(AGENT_DETERMINERS)})\s+empty\s+[A-Za-z]+\s+"
+    rf"(?:{'|'.join(_third_person(v) for v in AGENT_VERBS)}|{'|'.join(AGENT_VERBS)})(?![A-Za-z])",
+    re.IGNORECASE,
+)
+
+# A nominalisation by suffix: three or more letters of stem, then one of the
+# derivational endings. NM001 takes the verb-derived endings only; NM002 and
+# ND001 add the adjective-derived "-ity" and "-ness".
+VERBAL_NOMINAL = r"[A-Za-z]{3,}(?:tion|sion|ment|ance|ence)s?"
+ANY_NOMINAL = r"[A-Za-z]{3,}(?:tion|sion|ment|ance|ence|ity|ness)s?"
+MODIFIER = r"(?:[A-Za-z][\w'’-]*\s+)?"
+
+# Joined outside the f-string: a backslash inside an f-string expression is
+# a syntax error before Python 3.12.
+_LIGHT_VERB_ALT = "|".join(f.replace(" ", r"\s+") for f in LIGHT_VERB_FORMS)
+LIGHT_VERB_RE = re.compile(
+    rf"(?<![A-Za-z])(?:{_LIGHT_VERB_ALT})"
+    rf"\s+(?:a|an|the|some|any|its|their|our|this|further)\s+{MODIFIER}"
+    rf"{VERBAL_NOMINAL}(?![A-Za-z])",
+    re.IGNORECASE,
+)
+# NM002: an abstract noun after "through" or "by means of" carrying the
+# manner of an action ("respected through clarity").
+THROUGH_NOMINAL_RE = re.compile(
+    rf"(?<![A-Za-z])(?:through|by\s+means\s+of)\s+{MODIFIER}{ANY_NOMINAL}(?![A-Za-z])",
+    re.IGNORECASE,
+)
+NOMINAL_RE = re.compile(rf"(?<![A-Za-z]){ANY_NOMINAL}(?![A-Za-z])", re.IGNORECASE)
 
 # PG001's target is the em-dash (U+2014) used as a prose connective, plus the
 # ASCII `--` convention for it. The en-dash (U+2013) is excluded outright: it
@@ -985,6 +1157,35 @@ def lexical_findings(
     return out
 
 
+def structure_findings(
+    doc: Document, seg_index: int, seg: Segment, sentences: list[tuple[int, int]]
+) -> list[Finding]:
+    """Object agency, copula avoidance and nominalisation, skipping mentions."""
+    out: list[Finding] = []
+    quoted = quoted_spans(seg.clean)
+    # An empty listed noun ("an empty screen names") matches AG001 too; the
+    # absence rule owns it.
+    absence_starts = {m.start() for m in EMPTY_AGENT_RE.finditer(seg.clean)}
+    rules = (
+        ("AG001", AGENT_RE),
+        ("AG002", ABSENCE_AGENT_RE),
+        ("AG002", EMPTY_AGENT_RE),
+        ("CA001", COPULA_RE),
+        ("NM001", LIGHT_VERB_RE),
+        ("NM002", THROUGH_NOMINAL_RE),
+    )
+    for rule_id, pattern in rules:
+        for match in pattern.finditer(seg.clean):
+            if _inside(quoted, match.start()):
+                continue
+            if rule_id == "AG001" and match.start() in absence_starts:
+                continue
+            out.append(
+                _make(doc, seg_index, seg, rule_id, match.start(), sentences, match.end())
+            )
+    return out
+
+
 def _counted_mark(seg: Segment, start: int, end: int, pattern: re.Pattern[str]) -> bool:
     """Whether a sentence carries a mark that survives the orphan test."""
     return any(
@@ -1114,6 +1315,33 @@ def negation_findings(doc: Document, words: int) -> list[Finding]:
     return out
 
 
+def _singular(word: str) -> str:
+    return word[:-1] if word.endswith("s") and not word.endswith("ss") else word
+
+
+def nominal_density_findings(doc: Document, words: int) -> list[Finding]:
+    """Per-file nominalisation density. Report-only, compared input to output."""
+    if not words:
+        return []
+    count = sum(
+        1
+        for seg in doc.segments
+        for match in NOMINAL_RE.finditer(seg.clean)
+        if _singular(match.group(0).lower()) not in NOMINAL_STOPLIST
+    )
+    density = round(100.0 * count / words, 4)
+    return [
+        Finding(
+            rule_id="ND001",
+            file=doc.path,
+            anchor={"kind": "file"},
+            evidence=f"{count} nominalisations over {words} words (density={density:.2f}/100w)",
+            order=(10**6 - 1, 2),
+            metrics={"count": count, "per_100_words": density},
+        )
+    ]
+
+
 def uniformity_findings(doc: Document, lengths: list[int], openers: list[str]) -> list[Finding]:
     """Report-only, and only above the suppression threshold."""
     if len(lengths) < UNIFORMITY_MIN_SENTENCES:
@@ -1190,9 +1418,11 @@ def analyse(doc: Document) -> tuple[list[Finding], int, int]:
         findings.extend(contrast_findings(doc, seg_index, seg, sentences))
         findings.extend(importance_findings(doc, seg_index, seg, sentences))
         findings.extend(lexical_findings(doc, seg_index, seg, sentences))
+        findings.extend(structure_findings(doc, seg_index, seg, sentences))
         findings.extend(triad_findings(doc, seg_index, seg, sentences))
     findings.extend(repetition_findings(doc, stream, seg_sentences))
     findings.extend(negation_findings(doc, words))
+    findings.extend(nominal_density_findings(doc, words))
     findings.extend(uniformity_findings(doc, lengths, openers))
     findings.sort(key=lambda f: (f.order[0], f.order[1], f.rule_id))
     return findings, words, len(lengths)

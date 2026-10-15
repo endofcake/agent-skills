@@ -27,6 +27,7 @@ import json
 import re
 import subprocess
 import sys
+import tempfile
 import unittest
 from collections import Counter
 from pathlib import Path
@@ -87,6 +88,43 @@ class AnnotatedFixtures(unittest.TestCase):
                     if actual.get(n, Counter()) != expected.get(n, Counter())
                 ]
                 self.assertEqual(mismatches, [], "\n".join(mismatches))
+
+
+class AdvisoryFixtures(unittest.TestCase):
+    """Advisory families never count, so their fixture compares every finding
+    of those families, counted or not, and ignores every other family."""
+
+    FAMILIES = {"object_agency", "copula_avoidance", "nominalisation"}
+
+    def test_structure_findings_match_annotations(self) -> None:
+        path = FIXTURES / "structure.md"
+        code, records = run_detector(path)
+        self.assertEqual(code, 0)
+        scoped = [r for r in records if r.get("family") in self.FAMILIES]
+        actual = findings_by_line(scoped, counted_only=False)
+        expected = expectations(path)
+        lines = sorted(set(actual) | set(expected))
+        mismatches = [
+            f"line {n}: expected {dict(expected.get(n, {}))}, got {dict(actual.get(n, {}))}"
+            for n in lines
+            if actual.get(n, Counter()) != expected.get(n, Counter())
+        ]
+        self.assertEqual(mismatches, [], "\n".join(mismatches))
+
+    def test_nominal_density_falls_when_actions_return_to_verbs(self) -> None:
+        def density(text: str) -> float:
+            with tempfile.TemporaryDirectory() as tmp:
+                path = Path(tmp) / "draft.md"
+                path.write_text(text, encoding="utf-8")
+                _, records = run_detector(path)
+            return next(
+                r["metrics"]["per_100_words"] for r in records if r.get("rule_id") == "ND001"
+            )
+
+        before = density("The implementation of the validation requires the creation of a document.")
+        after = density("We validate the input before we create a document.")
+        self.assertGreater(before, after)
+        self.assertEqual(after, 0.0)
 
 
 class FileLevelFixtures(unittest.TestCase):

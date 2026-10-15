@@ -1,11 +1,11 @@
 ---
 name: desloppify
-description: Remove LLM register defects (contrast-pattern phrasing, punctuation glue, importance theater, filler) from a finished draft, leaving the text otherwise unchanged. Use on any LLM-drafted prose before a human reader sees it.
+description: Remove LLM register defects (contrast-pattern phrasing, punctuation glue, importance theater, filler, objects that act, actions hidden in nouns) from a finished draft, leaving the text otherwise unchanged. Use on any LLM-drafted prose before a human reader sees it.
 license: MIT
 metadata:
   author: endofcake
   source: https://github.com/endofcake/agent-skills
-  version: "1.0"
+  version: "1.1"
 ---
 
 # Desloppify
@@ -18,7 +18,7 @@ An edit pass over one finished text. Input: a file path, or quoted text. Output:
 
 - **Compressed antithesis** — "X, not Y" as the default sentence shape. *The boundary is situational, not fixed per pair* becomes *The boundary shifts with the situation.*
 - **Contrastive escalation** — the second half one-ups the first: "not just X — Y", "more than X, this is Y". State Y.
-- **Negative definition** — a thing described by what it is not. Say what it is.
+- **Negative definition** — a thing described by what it is not, including a rule written as a list of things its subject does not do ("does not apologise, promise, reassure or describe"). Say what it is or does.
 
 A contrast may stay when it corrects a wrong assumption the intended reader actually brings. Name that assumption in the change table when you exempt one.
 
@@ -39,11 +39,18 @@ A contrast may stay when it corrects a wrong assumption the intended reader actu
 ### Lexical tells
 
 - **Fashion vocabulary** — the detector keeps a small advisory list in `scripts/lexical_tells.txt`. Judge each hit in context and preserve domain terminology. Keep generation-specific examples in that data file; retire stale entries instead of accumulating word bans here.
+- **Copula avoidance** — an inflated verb in place of *is* or *has*: "serves as", "acts as", "stands as", "bears the name". Use *is* or *has*. A literal role stays: *the standby serves as primary while the primary restarts.*
+- **Synonym rotation** — one referent under several names in the same text ("user", then "learner"; "empty section", then "empty space", then "absence"). A reader takes each new name for a new thing. Pick the text's established term and use it every time.
+
+### Hidden actions
+
+- **Nominalisation** — an action carried by a noun made from a verb or adjective, often after a light verb ("make a decision", "provide an explanation") or after "through" ("respected through clarity"). Put the action in a verb with its actor as the subject: *The committee decides on Friday.* Keep a nominalisation that names a concept or an established term, labels a kind of thing ("praise", "reassurance"), or links back to the previous sentence. When the only available subject is not a person, keep the noun: the verb form would make an object act.
 
 ### Stance
 
 - **Meta-narration** — the text describing itself or its reader: "it is worth noting", "let's unpack this", "you might wonder". Delete it, or state the fact directly.
-- **Agency in abstractions** — inanimate things performing intentional acts: "the rule wants", "the document resists". Name who does what, or use a literal verb.
+- **Objects that act** — something that is not a person takes a verb of saying, showing, meaning, wanting or serving: "the rule wants", "the table teaches", "chrome serves the learner". An absence acting is the clearest case, because nothing is there to act: "an absence names the content to come". Name who does what, or use a passive or a sentence built on *is* or *has* in which the object no longer acts. A passive that keeps the object as its agent ("the endings are taught by the table") still has the object acting. The verbs a field uses literally for its own objects stay: *stress falls on the second syllable*, *the ending marks the case*, *the function returns a list*.
+- **Figure for a fact** — a simile, metaphor or analogy where the plain fact is available: "as the markings on an instrument do". State the fact. When the text gives no plain fact to substitute, keep the figure and record it as a contextual candidate kept.
 
 ### Contextual patterns
 
@@ -56,7 +63,7 @@ The detector has no proxy for these, so step 2 gives them a separate read. Quote
 
 Keep measurements, uncertainty, causal links, and deliberate voice. When splitting a sentence, retain the relationship between its facts with words such as "because" or "so" where needed. Avoid turning connected reasoning into a run of isolated statements.
 
-A plainer rewrite must not invent an actor, mechanism, measurement, or qualification. If a slogan cannot be made plain from the supplied context, preserve it and record it in the change table as a contextual candidate kept.
+A plainer rewrite must not invent an actor, mechanism, measurement, or qualification. An imperative addressed to the reader the text already instructs invents no actor. Without a person or such a reader, a rewrite of an object that acts uses *is*, or a passive without the object as its agent, and a nominalisation stays a noun. If a slogan cannot be made plain from the supplied context, preserve it and record it in the change table as a contextual candidate kept.
 
 ## Procedure
 
@@ -72,6 +79,6 @@ A plainer rewrite must not invent an actor, mechanism, measurement, or qualifica
 
    The path is relative to this skill's directory. Script needs Python 3.10+.
 
-   Contrast-frame and importance-theater findings are catalogue instances. Rewrite or exempt each under the rules above. The punctuation-glue density must not be higher than the input text's (run the script on both). A rise means the pass introduced what it removes. Adjacent-repetition and lexical-tell findings are advisory. Act on one where you agree with it. Negation density is a report-only measure of "not" and "never": rewriting contrast frames positively lowers it, so compare the input and output numbers alongside the punctuation-glue check.
+   Contrast-frame and importance-theater findings are catalogue instances. Rewrite or exempt each under the rules above. The punctuation-glue density must not be higher than the input text's (run the script on both). A rise means the pass introduced what it removes. Adjacent-repetition, lexical-tell, object-agency, copula-avoidance and nominalisation findings are advisory. Act on one where you agree with it. Negation density is a report-only measure of "not" and "never": rewriting contrast frames positively lowers it, so compare the input and output numbers alongside the punctuation-glue check. Nominal density is the same kind of measure for suffix-derived nouns, and turning hidden actions back into verbs lowers it.
 
 6. Deliver the edited text as a file, with a change table: one row per edit, before and after, with the pattern and reason. List contrast exemptions with the reader assumption each one corrects; record contextual candidates preserved because the wording serves the reader or context is missing.

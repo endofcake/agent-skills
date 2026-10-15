@@ -8,7 +8,9 @@
 battle-tested
 blast radius
 caveat
+cleanly
 critical finding
+deliberately
 earn its keep
 earns its keep
 footgun
@@ -17,6 +19,7 @@ lands
 load-bearing
 mint
 minted
+silently
 structurally
 surfaced
 surgical
