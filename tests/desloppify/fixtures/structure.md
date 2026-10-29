@@ -1,6 +1,6 @@
 # Structure fixture
 
-Each annotated line expects the listed object-agency, copula-avoidance, nominalisation, dangling-possessive and pronoun-reference findings. Other families are ignored here.
+Each annotated line expects the listed object-agency, copula-avoidance, nominalisation, dangling-possessive and pronoun-reference findings, and the mention rows that stand in for any of them inside a quotation. Other families are ignored here.
 
 An absence names the content to come. <!-- expect: AG002 -->
 
@@ -26,7 +26,7 @@ The function returns a list of rows.
 
 The learner names the letter aloud.
 
-A word like "the page shows" is quoted, so it is a mention.
+A word like "the page shows" is quoted, so it is a mention. <!-- expect: MN001 -->
 
 The proxy serves as a relay between the two networks. <!-- expect: CA001 -->
 
@@ -82,5 +82,5 @@ In the proposal by Smith, he argues for a rewrite.
 
 The call is the user's. The cut is the maintainer's. <!-- expect: DP001 DP001 -->
 
-A wrapped mention such as "the decision is
-the maintainer's." is quoted, so it is skipped.
+A wrapped mention such as "the decision is <!-- expect: MN001 -->
+the maintainer's." is quoted, so it is reported as a mention.

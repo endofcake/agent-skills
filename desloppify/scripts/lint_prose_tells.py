@@ -110,7 +110,7 @@ CF006 negative-definition opener ("This is not..."), CF007 do-support
 minimiser ("does not simply describe"), CF008 copular antithesis ("it's not
 X, it's Y"), CF009 not-really restatement, CF010 "not merely". CF007-CF010
 were mined from real LLM drafts rather than derived from the catalogue.
-A match inside a short double-quoted span is a mention and is skipped.
+A match inside a short double-quoted span is reported as MN001 instead.
 Misfire class for the whole family: a contrast that corrects a wrong
 assumption the reader actually brings is legitimate, and no regex knows
 that.
@@ -127,8 +127,8 @@ key insight"), IT002 insistence intensifiers ("genuinely", "actually"),
 IT003 performative candour ("honestly", "to be clear"). Whole-word matches
 only, so "actually" is a finding and "factually" is not. IT002 yields to a
 contrast frame that contains the same word ("does not simply retry" is
-CF007 alone). A match inside a short double-quoted span is a mention and
-is skipped; a quoted span over 80 characters stays in scope.
+CF007 alone). A match inside a short double-quoted span is reported as
+MN001 instead; a quoted span over 80 characters stays in scope.
 
 **lexical_tells** (advisory): LX001 word or phrase from
 ``lexical_tells.txt``, a short list of the current model generation's
@@ -148,8 +148,7 @@ act. The verbs a field uses
 literally for its own objects ("stress falls", "the function returns") are
 left off the verb list. Misfires: conventions a register accepts ("Figure 2
 shows", "the spec says"), and a person-noun outside the list is never
-caught. A match inside a short double-quoted span is a mention and is
-skipped.
+caught.
 
 **copula_avoidance** (advisory): CA001 an inflated verb standing in for
 "is" or "has" ("serves as", "acts as", "stands as", "bears the name").
@@ -183,6 +182,13 @@ is Sam's") matches as well, and the catalogue rewrites it like the rest.
 fronted phrase that names its owner only as a possessive, then a pronoun
 that must point back to that owner ("In Smith's proposal, he argues").
 Misfire for PR001: a paragraph under a heading that names the referent.
+
+**mention** (advisory): MN001 a match of any rule above, except punctuation
+glue, adjacent repetition and lexical tells, that starts inside a short
+double-quoted span (``QUOTED_SPAN``). A quoted phrase is usually a mention:
+'Delete "crucially"' talks about the word. The row names the rule it stands
+in for, so a quoted sentence the writer also asserts stays visible without
+counting against the text.
 
 **negation** (report_only): NG001 density of "not" (including "n't"
 contractions and "cannot"), NG002 density of "never". Contrast abuse
@@ -238,7 +244,7 @@ from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
-TOOL_VERSION = "1.4.0"
+TOOL_VERSION = "1.5.0"
 
 # Per-family disposition: how far each family's findings are trusted, in
 # declaration order (which is also report order). See the module docstring.
@@ -253,6 +259,7 @@ FAMILY_DISPOSITION: dict[str, str] = {
     "nominalisation": "advisory",
     "dangling_possessive": "keep",
     "pronoun_reference": "advisory",
+    "mention": "advisory",
     "negation": "report_only",
     "nominal_density": "report_only",
     "uniformity": "report_only",
@@ -303,6 +310,7 @@ RULES: dict[str, tuple[str, int, str]] = {
     "DP002": ("dangling_possessive", 1, "two or more dangling possessives in one sentence"),
     "PR001": ("pronoun_reference", 1, "paragraph opens on 'Its' or 'Their'"),
     "PR002": ("pronoun_reference", 1, "pronoun whose only antecedent is a possessive"),
+    "MN001": ("mention", 1, "another rule's match inside a short quoted span"),
     "NG001": ("negation", 1, "density of 'not' (including contractions)"),
     "NG002": ("negation", 1, "density of 'never'"),
     "ND001": ("nominal_density", 1, "density of suffix-derived nominalisations"),
@@ -699,10 +707,10 @@ EMDASH_RE = re.compile(r"—|(?<=\s)--(?=\s)")
 COLON_EXAMPLE_PREFIX = re.compile(r"^\s*[\"'“«]")
 
 # A short double-quoted span is a mention, not a use: 'Delete "crucially"
-# wherever it appears' talks about the word. Contrast and importance rules
-# skip a match that starts inside one. The length cap keeps a quoted
-# paragraph of draft text in scope. A span may cross a single line break,
-# because markdown source wraps prose, but not a blank line.
+# wherever it appears' talks about the word. A match that starts inside one
+# is reported as MN001 instead of under its own rule. The length cap keeps a
+# quoted paragraph of draft text in scope. A span may cross a single line
+# break, because markdown source wraps prose, but not a blank line.
 QUOTED_SPAN = re.compile(
     r"\"(?:[^\"\n]|\n(?![ \t]*\n)){1,80}\"|“(?:[^”\n]|\n(?![ \t]*\n)){1,80}”"
 )
@@ -1242,10 +1250,8 @@ def contrast_findings(
         sentence = seg.clean[start:end]
         for rule_id, pattern in CONTRAST_PATTERNS.items():
             for match in pattern.finditer(sentence):
-                if _inside(quoted, match.start() + start):
-                    continue
                 out.append(
-                    _make(
+                    _make_or_mention(
                         doc,
                         seg_index,
                         seg,
@@ -1253,6 +1259,7 @@ def contrast_findings(
                         match.start() + start,
                         sentences,
                         match.end() + start,
+                        quoted,
                     )
                 )
     return out
@@ -1270,12 +1277,12 @@ def importance_findings(
     quoted = quoted_spans(seg.clean)
     for rule_id, pattern in families:
         for match in pattern.finditer(seg.clean):
-            if _inside(quoted, match.start()):
-                continue
             if rule_id == "IT002" and any(s <= match.start() < e for s, e in owned):
                 continue
             out.append(
-                _make(doc, seg_index, seg, rule_id, match.start(), sentences, match.end())
+                _make_or_mention(
+                    doc, seg_index, seg, rule_id, match.start(), sentences, match.end(), quoted
+                )
             )
     return out
 
@@ -1296,7 +1303,7 @@ def lexical_findings(
 def structure_findings(
     doc: Document, seg_index: int, seg: Segment, sentences: list[tuple[int, int]]
 ) -> list[Finding]:
-    """Object agency, copula avoidance and nominalisation, skipping mentions."""
+    """Object agency, copula avoidance and nominalisation."""
     out: list[Finding] = []
     quoted = quoted_spans(seg.clean)
     # An empty listed noun ("an empty screen names") matches AG001 too; the
@@ -1321,14 +1328,16 @@ def structure_findings(
     )
     for rule_id, pattern in rules:
         for match in pattern.finditer(seg.clean):
-            if _inside(quoted, match.start()) or not _passes_word_lists(match):
+            if not _passes_word_lists(match):
                 continue
             if rule_id == "AG001" and match.start() in absence_starts:
                 continue
             if rule_id == "NM003" and _inside(owned, match.start()):
                 continue
             out.append(
-                _make(doc, seg_index, seg, rule_id, match.start(), sentences, match.end())
+                _make_or_mention(
+                    doc, seg_index, seg, rule_id, match.start(), sentences, match.end(), quoted
+                )
             )
     return out
 
@@ -1350,41 +1359,66 @@ def possessive_findings(
     out: list[Finding] = []
     quoted = quoted_spans(seg.clean)
 
-    def kept(match: re.Match[str], start: int) -> bool:
-        return _passes_word_lists(match) and not _inside(quoted, match.start() + start)
+    def make(rule_id: str, offset: int, end: int, note: str = "") -> Finding:
+        return _make_or_mention(
+            doc, seg_index, seg, rule_id, offset, sentences, end, quoted, note
+        )
 
     for start, end in sentences:
         sentence = seg.clean[start:end]
         spans = [
             (m.start(), m.end())
             for m in PREDICATIVE_POSSESSIVE_RE.finditer(sentence)
-            if kept(m, start)
+            if _passes_word_lists(m)
         ]
         if spans:
             spans += [
                 (m.start(), m.end())
                 for pattern in (GAPPED_POSSESSIVE_RE, CONTRAST_POSSESSIVE_RE)
                 for m in pattern.finditer(sentence, spans[0][1])
-                if kept(m, start)
+                if _passes_word_lists(m)
             ]
             spans.sort()
         for s, e in spans:
-            out.append(_make(doc, seg_index, seg, "DP001", start + s, sentences, start + e))
+            out.append(make("DP001", start + s, start + e))
         if len(spans) >= 2:
             s, e = spans[1]
-            found = _make(doc, seg_index, seg, "DP002", start + s, sentences, start + e)
-            out.append(replace(found, evidence=f"{len(spans)} in one sentence — {found.evidence}"))
+            out.append(make("DP002", start + s, start + e, f"{len(spans)} in one sentence"))
         antecedent = POSSESSIVE_ANTECEDENT_RE.match(sentence)
-        if antecedent and kept(antecedent, start):
-            out.append(
-                _make(doc, seg_index, seg, "PR002", start + antecedent.start(), sentences, end)
-            )
+        if antecedent and _passes_word_lists(antecedent):
+            out.append(make("PR002", start + antecedent.start(), end))
     if sentences:
         start, end = sentences[0]
         opener = PARAGRAPH_PRONOUN_RE.match(seg.clean, start, end)
-        if opener and not _inside(quoted, opener.start()):
-            out.append(_make(doc, seg_index, seg, "PR001", opener.start(), sentences, opener.end()))
+        if opener:
+            out.append(make("PR001", opener.start(), opener.end()))
     return out
+
+
+def _make_or_mention(
+    doc: Document,
+    seg_index: int,
+    seg: Segment,
+    rule_id: str,
+    offset: int,
+    sentences: list[tuple[int, int]],
+    match_end: int,
+    quoted: list[tuple[int, int]],
+    note: str = "",
+) -> Finding:
+    """A finding, or an MN001 row naming the rule when the match is quoted.
+
+    A match that starts inside a short quoted span is usually a mention: the
+    text talks about the phrase. It is still reported, as an advisory row,
+    so a phrase the writer quoted but also asserts stays visible. ``note``
+    goes before the quote ("2 in one sentence").
+    """
+    found = _make(doc, seg_index, seg, rule_id, offset, sentences, match_end)
+    if note:
+        found = replace(found, evidence=f"{note} — {found.evidence}")
+    if not _inside(quoted, offset):
+        return found
+    return replace(found, rule_id="MN001", evidence=f"{rule_id} — {found.evidence}")
 
 
 def _counted_mark(seg: Segment, start: int, end: int, pattern: re.Pattern[str]) -> bool:

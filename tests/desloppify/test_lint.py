@@ -100,6 +100,7 @@ class AdvisoryFixtures(unittest.TestCase):
         "nominalisation",
         "dangling_possessive",
         "pronoun_reference",
+        "mention",
     }
 
     def test_structure_findings_match_annotations(self) -> None:
