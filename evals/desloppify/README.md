@@ -16,6 +16,38 @@ the change table.
 
 ## Results
 
+### Iteration 6: rerun after the rule changes
+
+Iteration 6 ran on 2026-10-29 on Claude Sonnet 5.5 against the skill at
+commit 06a61e7. It reran three cases with the skill, three times each:
+dangling-possessives and hidden-actions, which the narrowed keep rules in
+commit 8036212 could change, and mention-versus-use, the only input whose
+detector output changed (three new mention rows). The other seven cases
+were not rerun. Their detector output is unchanged, and their inputs
+trigger none of the changed rules.
+
+| Case | Skill at 06a61e7 |
+|------|------------------|
+| mention-versus-use | 3 of 3 |
+| hidden-actions | 3 of 3 |
+| dangling-possessives | 3 of 3 |
+
+All nine runs passed every expectation, 51 of 51.
+
+- On dangling-possessives, every run named the grader and wrote "The
+  pipeline handles retries slowly". Two runs kept the adapter's exclusion
+  as "Only the extractor judges stress marks", which also excludes anything
+  else that might judge.
+- On hidden-actions, one run wrote "Clarity respects the learner" and
+  justified it by the narrowed rule: "respects" is not a verb of saying,
+  showing, meaning, wanting or serving. The rewrite makes an abstraction
+  act, which iteration 3 counted against the no-skill runs ("Feedback
+  respects the learner"). No expectation in the case catches it, so the
+  run passed.
+- On mention-versus-use, every run left the quoted phrases unchanged.
+- A run used 65,000 tokens and 20 seconds on average. The round used
+  590,000 tokens.
+
 ### Iteration 5: skill 1.2
 
 Iteration 5 ran on 2026-10-29 on Claude Sonnet 5.5, passed explicitly to
@@ -47,7 +79,7 @@ skill passed 25 of 27 and no skill 25 of 27.
   because the grader is the subject of the paragraph above. It also kept
   "the pipeline's handling of retries" under the rule that a noun stays when
   the only subject is not a person. Both rules were narrowed after the run,
-  in commit 8036212. The case has not been rerun since.
+  in commit 8036212, and iteration 6 reran the case.
 - Every skill run dropped "not the adapter's" from "The judgment on stress
   marks is the extractor's, not the adapter's", as compressed antithesis.
   Two no-skill runs kept "not the adapter". None of the expectations is
@@ -124,8 +156,9 @@ because the runs inherited the session model. They are superseded.
 
 ## Known gaps
 
-- Case 10 has not been rerun since commit 8036212 changed the two rules its
-  failing run relied on.
+- The nominalisation keep rule, narrowed in commit 8036212, lets a rewrite
+  give an abstraction a verb outside the object-agency list ("Clarity
+  respects the learner"). No hidden-actions expectation catches it.
 - The passing object-agency rewrites keep the figure: "the absence is the
   name of the content to come" still calls an absence a name. No
   expectation checks whether a rewrite stays figurative, and no run
