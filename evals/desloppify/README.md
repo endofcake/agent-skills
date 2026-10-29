@@ -20,7 +20,7 @@ the change table.
 
 Iteration 7 ran on 2026-10-29 on Claude Sonnet 5.5 against the skill at
 commit df02506. That commit replaced the verb-list test in the
-nominalisation keep rule with a test on the subject: an abstraction or a
+nominalisation keep rule with a test on the subject. An abstraction or a
 quality gets no verb, and the quality can become an adjective of something
 the text names. It also added a sixth hidden-actions expectation, that no
 rewrite gives an abstraction or a quality a verb. Only hidden-actions was
@@ -29,8 +29,8 @@ rerun, three times with the skill.
 All three runs passed all six expectations. Each wrote "The learner is
 respected when the feedback is clear" and gave the new rule as the reason.
 That sentence follows the rule's own example (*when the feedback is
-clear*), so the case shows the runs follow the example, not how the rule
-handles an abstraction the example does not cover. A run used
+clear*), so the runs followed the example. How the rule handles an
+abstraction the example does not cover is still untested. A run used
 65,000 tokens and 18 seconds on average, and the round used 194,000 tokens.
 
 ### Iteration 6: rerun after the rule changes
