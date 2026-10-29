@@ -29,8 +29,8 @@ rerun, three times with the skill.
 All three runs passed all six expectations. Each wrote "The learner is
 respected when the feedback is clear" and gave the new rule as the reason.
 That sentence follows the rule's own example (*when the feedback is
-clear*), so the case shows the runs follow the example. It does not show
-how the rule handles an abstraction the example does not cover. A run used
+clear*), so the case shows the runs follow the example, not how the rule
+handles an abstraction the example does not cover. A run used
 65,000 tokens and 18 seconds on average, and the round used 194,000 tokens.
 
 ### Iteration 6: rerun after the rule changes
