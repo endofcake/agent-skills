@@ -20,8 +20,8 @@ the change table.
 
 Iteration 6 ran on 2026-10-29 on Claude Sonnet 5.5 against the skill at
 commit 06a61e7. It reran three cases with the skill, three times each:
-dangling-possessives and hidden-actions, which the narrowed keep rules in
-commit 8036212 could change, and mention-versus-use, the only input whose
+dangling-possessives and hidden-actions, whose outcome depends on the keep
+rules narrowed in commit 8036212, and mention-versus-use, the only input whose
 detector output changed (three new mention rows). The other seven cases
 were not rerun. Their detector output is unchanged, and their inputs
 trigger none of the changed rules.
@@ -42,8 +42,8 @@ All nine runs passed every expectation, 51 of 51.
   justified it by the narrowed rule: "respects" is not a verb of saying,
   showing, meaning, wanting or serving. The rewrite makes an abstraction
   act, which iteration 3 counted against the no-skill runs ("Feedback
-  respects the learner"). No expectation in the case catches it, so the
-  run passed.
+  respects the learner"). The case has no expectation for it, so the run
+  passed.
 - On mention-versus-use, every run left the quoted phrases unchanged.
 - A run used 65,000 tokens and 20 seconds on average. The round used
   590,000 tokens.
@@ -158,7 +158,7 @@ because the runs inherited the session model. They are superseded.
 
 - The nominalisation keep rule, narrowed in commit 8036212, lets a rewrite
   give an abstraction a verb outside the object-agency list ("Clarity
-  respects the learner"). No hidden-actions expectation catches it.
+  respects the learner"). The hidden-actions case has no expectation for it.
 - The passing object-agency rewrites keep the figure: "the absence is the
   name of the content to come" still calls an absence a name. No
   expectation checks whether a rewrite stays figurative, and no run
