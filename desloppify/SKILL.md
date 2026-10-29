@@ -49,7 +49,7 @@ A contrast may stay when it corrects a wrong assumption the intended reader actu
 
 ### Reference
 
-- **Pronoun without an antecedent** — "its" or "their" opening a paragraph before anything it could point back to, or a pronoun whose only antecedent sits inside a possessive: "In Smith's proposal, he argues". The reader has to search for the referent. Name it: *Smith argues in his proposal.* Keep a pronoun whose referent the reader holds without searching, such as the subject of the heading directly above.
+- **Pronoun without an antecedent** — "its" or "their" opening a paragraph before anything it could point back to, or a pronoun whose only antecedent sits inside a possessive: "In Smith's proposal, he argues". Name the referent: *Smith argues in his proposal.* Keep a pronoun whose referent the reader holds without searching, such as the subject of the heading directly above.
 
 ### Stance
 
