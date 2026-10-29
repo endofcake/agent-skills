@@ -6,7 +6,7 @@ Portable skills for coding agents, in the [Agent Skills](https://agentskills.io/
 
 ### [desloppify](desloppify/SKILL.md)
 
-Removes LLM register defects from a finished draft while leaving the facts, terminology, and structure unchanged. The catalogue covers contrast-pattern phrasing ("it's not X, it's Y"), punctuation glue, importance theater ("crucially", "the key insight"), cadence filler, objects that act ("the table teaches"), and actions hidden in nouns ("make a decision").
+Removes LLM register defects from a finished draft while leaving the facts, terminology, and structure unchanged. The catalogue covers contrast-pattern phrasing ("it's not X, it's Y"), punctuation glue, importance theater ("crucially", "the key insight"), cadence filler, objects that act ("the table teaches"), actions hidden in nouns ("make a decision"), dangling possessives ("the decision is the maintainer's"), and pronouns without an antecedent.
 
 The skill runs a deterministic detector, [`lint_prose_tells.py`](desloppify/scripts/lint_prose_tells.py) (Python 3.10+, standard library), as a backstop on its own edits. The script also works standalone:
 
