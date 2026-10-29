@@ -21,8 +21,8 @@ the change table.
 Iteration 5 ran on 2026-10-29 on Claude Sonnet 5.5, passed explicitly to
 each run, against the skill at commit 7c2958a. The skill ran every case three
 times. Case 10 also ran three times with no skill, where the run gets the
-skill's one-line description as its only instruction. The table counts runs
-that passed every expectation.
+skill's one-line description as its only instruction. Each cell is the
+number of runs that passed every expectation.
 
 | Case | Skill 1.2 | No skill |
 |------|-----------|----------|
@@ -46,13 +46,13 @@ skill passed 25 of 27 and no skill 25 of 27.
   added no actor. The failing run kept "Its cache holds the last ten grades"
   because the grader is the subject of the paragraph above. It also kept
   "the pipeline's handling of retries" under the rule that a noun stays when
-  the only subject is not a person. Commit 8036212 narrowed both rules after
-  the run. The case has not been rerun since.
+  the only subject is not a person. Both rules were narrowed after the run,
+  in commit 8036212. The case has not been rerun since.
 - Every skill run dropped "not the adapter's" from "The judgment on stress
   marks is the extractor's, not the adapter's", as compressed antithesis.
-  Two no-skill runs kept "not the adapter". No expectation checks whether
-  the adapter's exclusion survives, and the catalogue does not say whether
-  it is a fact or a restatement.
+  Two no-skill runs kept "not the adapter". None of the expectations is
+  about whether the adapter's exclusion survives, and the catalogue has no
+  rule on whether it is a fact or a restatement.
 - Without the skill, Sonnet also rewrote every dangling possessive. One run
   wrote "The release laptop belongs to Sam", which keeps the laptop as
   subject, and another kept "Its".
