@@ -175,8 +175,8 @@ yours", "the cut is the maintainer's to make"). Once a sentence has one, a
 later clause that drops the copula too ("…, the risk the user's") or
 follows a contrast ("…, not the adapter's") also counts. DP002 marks a
 sentence with two or more. An "'s" after a word in ``CONTRACTION_HOSTS``
-("it's", "that's") is skipped. Misfire: literal ownership of a thing ("the
-laptop is Sam's").
+("it's", "that's") is skipped. Literal ownership of a thing ("the laptop
+is Sam's") matches as well, and the catalogue rewrites it like the rest.
 
 **pronoun_reference** (advisory): PR001 a paragraph that opens on "Its" or
 "Their", before anything in the paragraph they could point back to. PR002 a
