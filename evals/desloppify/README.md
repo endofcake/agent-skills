@@ -22,7 +22,7 @@ Iteration 7 ran on 2026-10-29 on Claude Sonnet 5.5 against the skill at
 commit df02506. That commit replaced the verb-list test in the
 nominalisation keep rule with a test on the subject. An abstraction or a
 quality gets no verb, and the quality can become an adjective of something
-the text names. It also added a sixth hidden-actions expectation, that no
+named in the text. It also added a sixth hidden-actions expectation, that no
 rewrite gives an abstraction or a quality a verb. Only hidden-actions was
 rerun, three times with the skill.
 
