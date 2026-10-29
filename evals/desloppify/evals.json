@@ -132,6 +132,25 @@
         "The rewrite of 'The explanation is made of concrete examples' does not make the explanation, an example or any other object explain or show anything",
         "The detector's nominal density on the output is lower than on the input"
       ]
+    },
+    {
+      "id": 10,
+      "name": "dangling-possessives",
+      "prompt": "Run the desloppify pass on the file. Save the edited text to output.md and the change table to changes.md.",
+      "files": [
+        "files/dangling_possessives.md"
+      ],
+      "expected_output": "Each possessive with a dropped noun becomes a sentence with the owner as subject; the literal ownership stays; the paragraph-opening 'Its' names the grader; the possessive nominalisation becomes a verb; no rewrite invents an actor.",
+      "expectations": [
+        "The output does not contain 'is the maintainer's'",
+        "The output does not contain 'the risk the user's'",
+        "The output does not contain 'not the adapter's'",
+        "The output contains verbatim 'The release laptop is Sam's'",
+        "The output does not contain 'handling of retries'",
+        "The rewrite of 'Its cache holds the last ten grades' names the grader",
+        "No rewrite introduces an actor the input does not mention, such as 'we', 'you' or 'the team'",
+        "The detector's nominal density on the output is lower than on the input"
+      ]
     }
   ]
 }

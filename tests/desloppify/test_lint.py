@@ -94,7 +94,13 @@ class AdvisoryFixtures(unittest.TestCase):
     """Advisory families never count, so their fixture compares every finding
     of those families, counted or not, and ignores every other family."""
 
-    FAMILIES = {"object_agency", "copula_avoidance", "nominalisation"}
+    FAMILIES = {
+        "object_agency",
+        "copula_avoidance",
+        "nominalisation",
+        "dangling_possessive",
+        "pronoun_reference",
+    }
 
     def test_structure_findings_match_annotations(self) -> None:
         path = FIXTURES / "structure.md"

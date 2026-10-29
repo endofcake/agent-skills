@@ -159,9 +159,30 @@ restarts").
 **nominalisation** (advisory): NM001 a light verb whose object is a
 verb-derived noun ("make a decision", "provide an explanation"), NM002 a
 nominalisation after "through" or "by means of" ("respected through
-clarity"). Both carry an action in a noun. Misfires: an established term
-("take action", "give permission") and a noun that names a thing rather
-than an act.
+clarity"), NM003 an action noun between an article and "of" ("the
+implementation of the cache"), NM004 a possessive actor, an action noun,
+then "of" ("the system's handling of the request"). All four carry an
+action in a noun. NM003 and NM004 also take the action nouns in
+``LISTED_ACTION_NOUNS`` ("removal", "failure", "change") and, before "of",
+"-ing" nouns outside ``ING_STOPLIST``. NM003 yields to an NM001 or NM002
+match over the same words. Misfires: an established term ("take action",
+"the definition of done") and a noun that names a thing rather than an
+act.
+
+**dangling_possessive** (keep): DP001 a possessive whose noun has been
+dropped, after a copula ("the decision is the maintainer's", "the call is
+yours", "the cut is the maintainer's to make"). Once a sentence has one, a
+later clause that drops the copula too ("…, the risk the user's") or
+follows a contrast ("…, not the adapter's") also counts. DP002 marks a
+sentence with two or more. An "'s" after a word in ``CONTRACTION_HOSTS``
+("it's", "that's") is skipped. Misfire: literal ownership of a thing ("the
+laptop is Sam's").
+
+**pronoun_reference** (advisory): PR001 a paragraph that opens on "Its" or
+"Their", before anything in the paragraph they could point back to. PR002 a
+fronted phrase that names its owner only as a possessive, then a pronoun
+that must point back to that owner ("In Smith's proposal, he argues").
+Misfire for PR001: a paragraph under a heading that names the referent.
 
 **negation** (report_only): NG001 density of "not" (including "n't"
 contractions and "cannot"), NG002 density of "never". Contrast abuse
@@ -217,7 +238,7 @@ from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any
 
-TOOL_VERSION = "1.3.0"
+TOOL_VERSION = "1.4.0"
 
 # Per-family disposition: how far each family's findings are trusted, in
 # declaration order (which is also report order). See the module docstring.
@@ -230,6 +251,8 @@ FAMILY_DISPOSITION: dict[str, str] = {
     "object_agency": "advisory",
     "copula_avoidance": "advisory",
     "nominalisation": "advisory",
+    "dangling_possessive": "keep",
+    "pronoun_reference": "advisory",
     "negation": "report_only",
     "nominal_density": "report_only",
     "uniformity": "report_only",
@@ -274,6 +297,12 @@ RULES: dict[str, tuple[str, int, str]] = {
     "CA001": ("copula_avoidance", 1, "inflated verb in place of 'is' or 'has'"),
     "NM001": ("nominalisation", 1, "light verb with a nominalised action as its object"),
     "NM002": ("nominalisation", 1, "nominalisation after 'through' or 'by means of'"),
+    "NM003": ("nominalisation", 1, "action noun between an article and 'of'"),
+    "NM004": ("nominalisation", 1, "possessive actor, an action noun, then 'of'"),
+    "DP001": ("dangling_possessive", 1, "possessive whose noun is dropped after a copula"),
+    "DP002": ("dangling_possessive", 1, "two or more dangling possessives in one sentence"),
+    "PR001": ("pronoun_reference", 1, "paragraph opens on 'Its' or 'Their'"),
+    "PR002": ("pronoun_reference", 1, "pronoun whose only antecedent is a possessive"),
     "NG001": ("negation", 1, "density of 'not' (including contractions)"),
     "NG002": ("negation", 1, "density of 'never'"),
     "ND001": ("nominal_density", 1, "density of suffix-derived nominalisations"),
@@ -440,10 +469,51 @@ LIGHT_VERB_FORMS = (
 NOMINAL_STOPLIST = frozenset(
     {
         "audience", "balance", "business", "city", "comment", "commitment", "community",
-        "department", "distance", "document", "element", "entity",
-        "evidence", "experiment", "fragment", "instance", "instrument",
-        "moment", "segment", "sentence", "silence", "station", "university",
+        "condition", "definition", "department", "destination", "dimension",
+        "distance", "document", "element", "entity", "environment", "evidence",
+        "experiment", "fraction", "fragment", "function", "government",
+        "information", "instance", "instrument", "location", "moment", "option",
+        "portion", "position", "proportion", "provenance", "question", "section",
+        "segment", "sentence", "session", "silence", "station", "substance",
+        "university", "version",
     }
+)
+# NM003 and NM004 also take action nouns that no suffix rule can find:
+# "-al", "-ure" and "-age" are too common as plain endings, and a noun
+# converted from a verb with no ending ("change", "review") has no shape.
+LISTED_ACTION_NOUNS = (
+    "analysis", "approval", "arrival", "attempt", "breakage", "change", "closure",
+    "decrease", "delay", "denial", "departure", "disclosure", "dismissal",
+    "disposal", "exposure", "failure", "increase", "leakage", "loss", "proposal",
+    "refusal", "release", "removal", "renewal", "request", "retrieval", "reversal",
+    "review", "survival", "update", "usage", "use", "withdrawal",
+)
+# NM003 takes "-ing" nouns before "of" ("the handling of"). These name
+# things or fixed senses instead of an action.
+ING_STOPLIST = frozenset(
+    {
+        "beginning", "building", "ceiling", "ending", "evening", "heading",
+        "meaning", "morning", "nothing", "padding", "setting", "sibling",
+        "something", "spelling", "string", "substring", "wording",
+    }
+)
+# DP001 and NM004 read "'s" as a possessive. After these words it is a
+# contraction of "is" or "has" ("it's", "that's").
+CONTRACTION_HOSTS = frozenset(
+    {"he", "here", "how", "it", "let", "one", "she", "that", "there", "what", "where", "who"}
+)
+# DP001: a copula, then a possessive whose noun has been dropped ("the
+# decision is the maintainer's").
+POSSESSIVE_COPULAS = (
+    "is", "are", "was", "were", "remain", "remains", "remained",
+    "stay", "stays", "stayed", "become", "becomes", "became",
+)
+INDEPENDENT_POSSESSIVES = ("hers", "mine", "ours", "theirs", "yours")
+# PR002: a fronted phrase that names its owner only in a possessive, then a
+# pronoun that has to point back at that owner ("In Smith's proposal, he").
+FRONTING_PREPOSITIONS = (
+    "according to", "at", "despite", "for", "from", "in", "on", "throughout",
+    "under", "within",
 )
 
 
@@ -555,6 +625,67 @@ THROUGH_NOMINAL_RE = re.compile(
     re.IGNORECASE,
 )
 NOMINAL_RE = re.compile(rf"(?<![A-Za-z]){ANY_NOMINAL}(?![A-Za-z])", re.IGNORECASE)
+
+# One word with no apostrophe, so a possessive cannot fill a modifier slot.
+PLAIN = r"[A-Za-z][\w-]*"
+_LISTED_ACTION = rf"(?:{'|'.join(LISTED_ACTION_NOUNS)})(?:e?s)?"
+# NM003: an action noun between an article and "of" ("the implementation
+# of the cache"). The noun group is checked against the stoplists.
+OF_NOMINAL_RE = re.compile(
+    rf"(?<![A-Za-z])(?:the|a|an)\s+(?:{PLAIN}\s+)?"
+    rf"(?P<noun>{VERBAL_NOMINAL}|{_LISTED_ACTION}|[A-Za-z]{{3,}}ing)\s+of(?![A-Za-z])",
+    re.IGNORECASE,
+)
+# A possessive word: "maintainer's", or the plural "maintainers'". The owner
+# group is checked against CONTRACTION_HOSTS.
+POSSESSIVE_WORD = rf"(?P<owner>[A-Za-z][\w-]*)(?:['’]s|s['’])(?![A-Za-z])"
+# NM004: a possessive actor, an action noun, then "of" ("the system's
+# handling of the request"). Both the actor and the object of the action
+# sit in noun phrases. Without the "of" the shape is mostly a plain noun
+# with an owner ("the brief's reference").
+POSSESSIVE_NOMINAL_RE = re.compile(
+    rf"(?<![\w'’]){POSSESSIVE_WORD}\s+(?:{PLAIN}\s+)?"
+    rf"(?P<noun>{VERBAL_NOMINAL}|{_LISTED_ACTION}|[A-Za-z]{{3,}}ing)\s+of(?![A-Za-z])",
+    re.IGNORECASE,
+)
+# The possessive ends its clause: punctuation, a dash, the end of the text,
+# or a short tail that keeps the noun dropped ("the maintainer's to make").
+_CLAUSE_END = (
+    r"(?=\s*(?:[,.;:!?)\]]|—|--|$)"
+    r"|\s+(?:to\s+[A-Za-z]+|alone|and|or|not|too)(?![A-Za-z]))"
+)
+_POSSESSIVE_DET = r"(?:the|a|an|this|that|each|every|our|your|their|its)"
+PREDICATIVE_POSSESSIVE_RE = re.compile(
+    rf"(?<![A-Za-z])(?:{'|'.join(POSSESSIVE_COPULAS)})(?:\s+[A-Za-z]+ly)?\s+"
+    rf"(?:(?:{_POSSESSIVE_DET}\s+(?:{PLAIN}\s+)?)?{POSSESSIVE_WORD}"
+    rf"|(?:{'|'.join(INDEPENDENT_POSSESSIVES)})(?![A-Za-z])){_CLAUSE_END}",
+    re.IGNORECASE | re.MULTILINE,
+)
+# A later clause that drops the copula as well ("…, the risk the user's").
+# Searched only after a predicative possessive in the same sentence.
+GAPPED_POSSESSIVE_RE = re.compile(
+    rf"(?:[,;]|—|(?<![A-Za-z])and)\s+(?:and\s+)?{_POSSESSIVE_DET}\s+(?:{PLAIN}\s+){{1,2}}?"
+    rf"(?:(?:the|a|an)\s+)?{POSSESSIVE_WORD}(?=\s*(?:[,.;:!?)\]]|—|--|$))",
+    re.IGNORECASE | re.MULTILINE,
+)
+# The same after a contrast, with the noun dropped as well ("…is the
+# extractor's, not the adapter's").
+CONTRAST_POSSESSIVE_RE = re.compile(
+    rf"(?<![A-Za-z])(?:not|but|nor|rather\s+than)\s+(?:{_POSSESSIVE_DET}\s+)?(?:{PLAIN}\s+)?"
+    rf"{POSSESSIVE_WORD}(?=\s*(?:[,.;:!?)\]]|—|--|$))",
+    re.IGNORECASE | re.MULTILINE,
+)
+# PR001: a paragraph that opens on a possessive pronoun, before anything it
+# could point back to.
+PARAGRAPH_PRONOUN_RE = re.compile(r"\s*(?:Its|Their)(?![A-Za-z])")
+# PR002: the owner appears only as a possessive in a fronted phrase, and the
+# main clause opens on a pronoun ("In Smith's proposal, he argues").
+_FRONTING_ALT = "|".join(p.replace(" ", r"\s+") for p in FRONTING_PREPOSITIONS)
+POSSESSIVE_ANTECEDENT_RE = re.compile(
+    rf"\s*(?:{_FRONTING_ALT})\s+(?:(?:the|a|an|this|that)\s+)?(?:{PLAIN}\s+)?{POSSESSIVE_WORD}"
+    rf"\s+(?:{PLAIN}\s+){{0,3}}?{PLAIN}\s*,\s+(?:he|she|they|it)(?![A-Za-z])",
+    re.IGNORECASE,
+)
 
 # PG001's target is the em-dash (U+2014) used as a prose connective, plus the
 # ASCII `--` convention for it. The en-dash (U+2013) is excluded outright: it
@@ -1025,7 +1156,9 @@ def _is_guarded_period(text: str, index: int, opens_new_sentence: bool) -> bool:
     token = text[back + 1 : index].lower()
     if not token:
         return False
-    if len(token) == 1 and token.isalpha():
+    # A letter after an apostrophe is a possessive or contraction ending
+    # ("the user's."), not an initial.
+    if len(token) == 1 and token.isalpha() and (back < 0 or text[back] not in "'’"):
         return True
     if token in SENTENCE_FINAL_ABBREVIATIONS:
         return not opens_new_sentence
@@ -1166,6 +1299,13 @@ def structure_findings(
     # An empty listed noun ("an empty screen names") matches AG001 too; the
     # absence rule owns it.
     absence_starts = {m.start() for m in EMPTY_AGENT_RE.finditer(seg.clean)}
+    # "provides a clear explanation of" and "through the creation of" match
+    # NM003 too; the light-verb and "through" rules own them.
+    owned = [
+        (m.start(), m.end())
+        for pattern in (LIGHT_VERB_RE, THROUGH_NOMINAL_RE)
+        for m in pattern.finditer(seg.clean)
+    ]
     rules = (
         ("AG001", AGENT_RE),
         ("AG002", ABSENCE_AGENT_RE),
@@ -1173,16 +1313,74 @@ def structure_findings(
         ("CA001", COPULA_RE),
         ("NM001", LIGHT_VERB_RE),
         ("NM002", THROUGH_NOMINAL_RE),
+        ("NM003", OF_NOMINAL_RE),
+        ("NM004", POSSESSIVE_NOMINAL_RE),
     )
     for rule_id, pattern in rules:
         for match in pattern.finditer(seg.clean):
-            if _inside(quoted, match.start()):
+            if _inside(quoted, match.start()) or not _passes_word_lists(match):
                 continue
             if rule_id == "AG001" and match.start() in absence_starts:
+                continue
+            if rule_id == "NM003" and _inside(owned, match.start()):
                 continue
             out.append(
                 _make(doc, seg_index, seg, rule_id, match.start(), sentences, match.end())
             )
+    return out
+
+
+def _passes_word_lists(match: re.Match[str]) -> bool:
+    """Reject a stoplisted noun, and an "'s" that is a contraction."""
+    groups = match.groupdict()
+    noun = (groups.get("noun") or "").lower()
+    if noun and (_singular(noun) in NOMINAL_STOPLIST or noun in ING_STOPLIST):
+        return False
+    owner = (groups.get("owner") or "").lower()
+    return owner not in CONTRACTION_HOSTS
+
+
+def possessive_findings(
+    doc: Document, seg_index: int, seg: Segment, sentences: list[tuple[int, int]]
+) -> list[Finding]:
+    """Dangling possessives, and pronouns whose owner is only a possessive."""
+    out: list[Finding] = []
+    quoted = quoted_spans(seg.clean)
+
+    def kept(match: re.Match[str], start: int) -> bool:
+        return _passes_word_lists(match) and not _inside(quoted, match.start() + start)
+
+    for start, end in sentences:
+        sentence = seg.clean[start:end]
+        spans = [
+            (m.start(), m.end())
+            for m in PREDICATIVE_POSSESSIVE_RE.finditer(sentence)
+            if kept(m, start)
+        ]
+        if spans:
+            spans += [
+                (m.start(), m.end())
+                for pattern in (GAPPED_POSSESSIVE_RE, CONTRAST_POSSESSIVE_RE)
+                for m in pattern.finditer(sentence, spans[0][1])
+                if kept(m, start)
+            ]
+            spans.sort()
+        for s, e in spans:
+            out.append(_make(doc, seg_index, seg, "DP001", start + s, sentences, start + e))
+        if len(spans) >= 2:
+            s, e = spans[1]
+            found = _make(doc, seg_index, seg, "DP002", start + s, sentences, start + e)
+            out.append(replace(found, evidence=f"{len(spans)} in one sentence — {found.evidence}"))
+        antecedent = POSSESSIVE_ANTECEDENT_RE.match(sentence)
+        if antecedent and kept(antecedent, start):
+            out.append(
+                _make(doc, seg_index, seg, "PR002", start + antecedent.start(), sentences, end)
+            )
+    if sentences:
+        start, end = sentences[0]
+        opener = PARAGRAPH_PRONOUN_RE.match(seg.clean, start, end)
+        if opener and not _inside(quoted, opener.start()):
+            out.append(_make(doc, seg_index, seg, "PR001", opener.start(), sentences, opener.end()))
     return out
 
 
@@ -1419,6 +1617,7 @@ def analyse(doc: Document) -> tuple[list[Finding], int, int]:
         findings.extend(importance_findings(doc, seg_index, seg, sentences))
         findings.extend(lexical_findings(doc, seg_index, seg, sentences))
         findings.extend(structure_findings(doc, seg_index, seg, sentences))
+        findings.extend(possessive_findings(doc, seg_index, seg, sentences))
         findings.extend(triad_findings(doc, seg_index, seg, sentences))
     findings.extend(repetition_findings(doc, stream, seg_sentences))
     findings.extend(negation_findings(doc, words))

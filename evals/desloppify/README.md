@@ -74,6 +74,8 @@ because the runs inherited the session model. They are superseded.
 
 ## Known gaps
 
+- Case 10, dangling-possessives, was added on 2026-10-29 with skill
+  version 1.2 and has not been run.
 - The passing object-agency rewrites keep the figure: "the absence is the
   name of the content to come" still calls an absence a name. No
   expectation checks whether a rewrite stays figurative, and no run

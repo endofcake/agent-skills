@@ -1,11 +1,11 @@
 ---
 name: desloppify
-description: Remove LLM register defects (contrast-pattern phrasing, punctuation glue, importance theater, filler, objects that act, actions hidden in nouns) from a finished draft, leaving the text otherwise unchanged. Use on any LLM-drafted prose before a human reader sees it.
+description: Remove LLM register defects (contrast-pattern phrasing, punctuation glue, importance theater, filler, objects that act, actions hidden in nouns, dangling possessives) from a finished draft, leaving the text otherwise unchanged. Use on any LLM-drafted prose before a human reader sees it.
 license: MIT
 metadata:
   author: endofcake
   source: https://github.com/endofcake/agent-skills
-  version: "1.1"
+  version: "1.2"
 ---
 
 # Desloppify
@@ -44,7 +44,12 @@ A contrast may stay when it corrects a wrong assumption the intended reader actu
 
 ### Hidden actions
 
-- **Nominalisation** — an action carried by a noun made from a verb or adjective, often after a light verb ("make a decision", "provide an explanation") or after "through" ("respected through clarity"). Put the action in a verb with its actor as the subject: *The committee decides on Friday.* Keep a nominalisation that names a concept or an established term, labels a kind of thing ("praise", "reassurance"), or links back to the previous sentence. When the only available subject is not a person, keep the noun: the verb form would make an object act.
+- **Nominalisation** — an action carried by a noun made from a verb or adjective. It often follows a light verb ("make a decision", "provide an explanation") or "through" ("respected through clarity"), or sits between an article and "of" ("the implementation of the cache"). A possessive can hold the actor as well ("the system's handling of the request"). Put the action in a verb with its actor as the subject: *The committee decides on Friday.* *The system handles the request.* Keep a nominalisation that names a concept or an established term, labels a kind of thing ("praise", "reassurance"), or links back to the previous sentence. When the only available subject is not a person, keep the noun: the verb form would make an object act.
+- **Dangling possessive** — a possessive whose noun has been dropped, so ownership stands in for an action: "the decision is the maintainer's", "the call is yours", "the cut is the maintainer's to make". Drafts stack them in one sentence: "the decision is the maintainer's, the risk the user's"; "the judgment is the extractor's, not the adapter's". Make the owner the subject and put the action in its verb: *The maintainer decides, and the user bears the risk.* When the text does not say what the owner does, use *is* or *has* with the owner as subject: *The maintainer has the decision.* Literal ownership of a thing stays: *the laptop is Sam's*. Exempt it in the change table.
+
+### Reference
+
+- **Pronoun without an antecedent** — "its" or "their" opening a paragraph before anything it could point back to, or a pronoun whose only antecedent sits inside a possessive: "In Smith's proposal, he argues". The reader has to search for the referent. Name it: *Smith argues in his proposal.* Keep a pronoun whose referent the reader holds without searching, such as the subject of the heading directly above.
 
 ### Stance
 
@@ -79,6 +84,6 @@ A plainer rewrite must not invent an actor, mechanism, measurement, or qualifica
 
    The path is relative to this skill's directory. Script needs Python 3.10+.
 
-   Contrast-frame and importance-theater findings are catalogue instances. Rewrite or exempt each under the rules above. The punctuation-glue density must not be higher than the input text's (run the script on both). A rise means the pass introduced what it removes. Adjacent-repetition, lexical-tell, object-agency, copula-avoidance and nominalisation findings are advisory. Act on one where you agree with it. Negation density is a report-only measure of "not" and "never": rewriting contrast frames positively lowers it, so compare the input and output numbers alongside the punctuation-glue check. Nominal density is the same kind of measure for suffix-derived nouns, and turning hidden actions back into verbs lowers it.
+   Contrast-frame, importance-theater and dangling-possessive findings are catalogue instances. Rewrite or exempt each under the rules above. The punctuation-glue density must not be higher than the input text's (run the script on both). A rise means the pass introduced what it removes. Adjacent-repetition, lexical-tell, object-agency, copula-avoidance, nominalisation and pronoun-reference findings are advisory. Act on one where you agree with it. Negation density is a report-only measure of "not" and "never": rewriting contrast frames positively lowers it, so compare the input and output numbers alongside the punctuation-glue check. Nominal density is the same kind of measure for suffix-derived nouns, and turning hidden actions back into verbs lowers it.
 
 6. Deliver the edited text as a file, with a change table: one row per edit, before and after, with the pattern and reason. List contrast exemptions with the reader assumption each one corrects; record contextual candidates preserved because the wording serves the reader or context is missing.

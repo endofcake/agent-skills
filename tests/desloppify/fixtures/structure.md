@@ -1,6 +1,6 @@
 # Structure fixture
 
-Each annotated line expects the listed object-agency, copula-avoidance and nominalisation findings. Other families are ignored here.
+Each annotated line expects the listed object-agency, copula-avoidance, nominalisation, dangling-possessive and pronoun-reference findings. Other families are ignored here.
 
 An absence names the content to come. <!-- expect: AG002 -->
 
@@ -41,3 +41,43 @@ The learner is respected through clarity. <!-- expect: NM002 -->
 The team decided on Friday.
 
 The learner makes a cake.
+
+The implementation of the cache took a week. <!-- expect: NM003 -->
+
+The handling of errors is slow. <!-- expect: NM003 -->
+
+The beginning of the file is blank.
+
+The version of the tool is old.
+
+The maintainer's review of the proposal came late. <!-- expect: NM004 -->
+
+The user's existing account stays open.
+
+The team's decision came late.
+
+Let's review the code.
+
+The decision is the maintainer's. <!-- expect: DP001 -->
+
+The call is yours. <!-- expect: DP001 -->
+
+The cut is the maintainers' to make. <!-- expect: DP001 -->
+
+The decision is the maintainer's, the risk the user's. <!-- expect: DP001 DP001 DP002 -->
+
+The judgment is the extractor's, not the adapter's. <!-- expect: DP001 DP001 DP002 -->
+
+It's Sam's turn, and that's all.
+
+The risk is the user's own problem.
+
+Its value lies in the cache. <!-- expect: PR001 -->
+
+The cache is small. Its value lies in the hit rate.
+
+In Smith's proposal, he argues for a rewrite. <!-- expect: PR002 -->
+
+In the proposal by Smith, he argues for a rewrite.
+
+The call is the user's. The cut is the maintainer's. <!-- expect: DP001 DP001 -->
