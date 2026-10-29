@@ -124,13 +124,14 @@
       "files": [
         "files/hidden_actions.md"
       ],
-      "expected_output": "The light-verb and 'through' nominalisations become verbs with a person as subject; the explanation sentence does not turn into an object explaining; the labels for kinds of feedback stay nouns.",
+      "expected_output": "The light-verb and 'through' nominalisations become verbs with a person as subject; the explanation sentence does not turn into an object explaining; the labels for kinds of feedback stay nouns; no abstraction becomes the subject of a verb.",
       "expectations": [
         "The output does not contain 'make a decision'",
         "The output does not contain 'through clarity'",
         "The output contains verbatim 'Praise and reassurance'",
         "The rewrite of 'The explanation is made of concrete examples' does not make the explanation, an example or any other object explain or show anything",
-        "The detector's nominal density on the output is lower than on the input"
+        "The detector's nominal density on the output is lower than on the input",
+        "No rewrite gives clarity or another abstraction or quality a verb, as 'Clarity respects the learner' does"
       ]
     },
     {
