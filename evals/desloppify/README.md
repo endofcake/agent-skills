@@ -37,7 +37,7 @@ All nine runs passed every expectation, 51 of 51.
 - On dangling-possessives, every run named the grader and wrote "The
   pipeline handles retries slowly". Two runs kept the adapter's exclusion
   as "Only the extractor judges stress marks", which also excludes anything
-  else that might judge.
+  else.
 - On hidden-actions, one run wrote "Clarity respects the learner" and
   justified it by the narrowed rule: "respects" is not a verb of saying,
   showing, meaning, wanting or serving. The rewrite makes an abstraction
