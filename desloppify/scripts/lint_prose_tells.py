@@ -701,8 +701,11 @@ COLON_EXAMPLE_PREFIX = re.compile(r"^\s*[\"'“«]")
 # A short double-quoted span is a mention, not a use: 'Delete "crucially"
 # wherever it appears' talks about the word. Contrast and importance rules
 # skip a match that starts inside one. The length cap keeps a quoted
-# paragraph of draft text in scope.
-QUOTED_SPAN = re.compile(r"\"[^\"\n]{1,80}\"|“[^”\n]{1,80}”")
+# paragraph of draft text in scope. A span may cross a single line break,
+# because markdown source wraps prose, but not a blank line.
+QUOTED_SPAN = re.compile(
+    r"\"(?:[^\"\n]|\n(?![ \t]*\n)){1,80}\"|“(?:[^”\n]|\n(?![ \t]*\n)){1,80}”"
+)
 
 
 def quoted_spans(text: str) -> list[tuple[int, int]]:

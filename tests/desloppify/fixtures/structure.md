@@ -81,3 +81,6 @@ In Smith's proposal, he argues for a rewrite. <!-- expect: PR002 -->
 In the proposal by Smith, he argues for a rewrite.
 
 The call is the user's. The cut is the maintainer's. <!-- expect: DP001 DP001 -->
+
+A wrapped mention such as "the decision is
+the maintainer's." is quoted, so it is skipped.
