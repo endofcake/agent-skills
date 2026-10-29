@@ -16,6 +16,56 @@ the change table.
 
 ## Results
 
+### Iteration 5: skill 1.2
+
+Iteration 5 ran on 2026-10-29 on Claude Sonnet 5.5, passed explicitly to
+each run, against the skill at commit 7c2958a. The skill ran every case three
+times. Case 10 also ran three times with no skill, where the run gets the
+skill's one-line description as its only instruction. The table counts runs
+that passed every expectation.
+
+| Case | Skill 1.2 | No skill |
+|------|-----------|----------|
+| choreographed-review | 3 of 3 | not run |
+| glued-causal | 3 of 3 | not run |
+| legitimate-contrast | 3 of 3 | not run |
+| slogan-without-context | 3 of 3 | not run |
+| mention-versus-use | 3 of 3 | not run |
+| specific-agreement-only | 3 of 3 | not run |
+| derivable-slogan | 2 of 3 | not run |
+| object-agency | 3 of 3 | not run |
+| hidden-actions | 2 of 3 | not run |
+| dangling-possessives | 2 of 3 | 1 of 3 |
+
+Counted by expectation, skill 1.2 passed 122 of 126. On case 10 alone, the
+skill passed 25 of 27 and no skill 25 of 27.
+
+- On dangling-possessives, every skill run rewrote the three dropped-noun
+  possessives with the owner as subject ("The maintainer decides whether to
+  ship, and the user bears the risk", "Sam owns the release laptop") and
+  added no actor. The failing run kept "Its cache holds the last ten grades"
+  because the grader is the subject of the paragraph above. It also kept
+  "the pipeline's handling of retries" under the rule that a noun stays when
+  the only subject is not a person. Commit 8036212 narrowed both rules after
+  the run. The case has not been rerun since.
+- Every skill run dropped "not the adapter's" from "The judgment on stress
+  marks is the extractor's, not the adapter's", as compressed antithesis.
+  Two no-skill runs kept "not the adapter". No expectation checks whether
+  the adapter's exclusion survives, and the catalogue does not say whether
+  it is a fact or a restatement.
+- Without the skill, Sonnet also rewrote every dangling possessive. One run
+  wrote "The release laptop belongs to Sam", which keeps the laptop as
+  subject, and another kept "Its".
+- Against iteration 3, derivable-slogan fell from 3 of 3 to 2 of 3. One run
+  rewrote "profiling later showed" and "what the profile shows" as objects
+  that act. The other two kept them as the field's literal verbs.
+  Hidden-actions stayed at 2 of 3, and again one run left "respected through
+  clarity". Object-agency passed in every run, on *is* or *has*.
+- A run used 64,000 tokens and 18 seconds on average with the skill, and
+  59,000 and 15 with no skill. The round used 2.1 million tokens.
+
+### Iteration 3: skill 1.1
+
 Iteration 3 ran on 2026-10-15 on Claude Sonnet 5.5, passed explicitly to
 each run. It compares three configurations:
 
@@ -74,8 +124,8 @@ because the runs inherited the session model. They are superseded.
 
 ## Known gaps
 
-- Case 10, dangling-possessives, was added on 2026-10-29 with skill
-  version 1.2 and has not been run.
+- Case 10 has not been rerun since commit 8036212 changed the two rules its
+  failing run relied on.
 - The passing object-agency rewrites keep the figure: "the absence is the
   name of the content to come" still calls an absence a name. No
   expectation checks whether a rewrite stays figurative, and no run
