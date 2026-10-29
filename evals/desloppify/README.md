@@ -16,6 +16,23 @@ the change table.
 
 ## Results
 
+### Iteration 7: abstraction keep rule
+
+Iteration 7 ran on 2026-10-29 on Claude Sonnet 5.5 against the skill at
+commit df02506. That commit replaced the verb-list test in the
+nominalisation keep rule with a test on the subject: an abstraction or a
+quality gets no verb, and the quality can become an adjective of something
+the text names. It also added a sixth hidden-actions expectation, that no
+rewrite gives an abstraction or a quality a verb. Only hidden-actions was
+rerun, three times with the skill.
+
+All three runs passed all six expectations. Each wrote "The learner is
+respected when the feedback is clear" and gave the new rule as the reason.
+That sentence follows the rule's own example (*when the feedback is
+clear*), so the case shows the runs follow the example. It does not show
+how the rule handles an abstraction the example does not cover. A run used
+65,000 tokens and 18 seconds on average, and the round used 194,000 tokens.
+
 ### Iteration 6: rerun after the rule changes
 
 Iteration 6 ran on 2026-10-29 on Claude Sonnet 5.5 against the skill at
@@ -156,9 +173,9 @@ because the runs inherited the session model. They are superseded.
 
 ## Known gaps
 
-- The nominalisation keep rule, narrowed in commit 8036212, lets a rewrite
-  give an abstraction a verb outside the object-agency list ("Clarity
-  respects the learner"). The hidden-actions case has no expectation for it.
+- The keep rule's example, *when the feedback is clear*, matches the
+  hidden-actions input. No case tests the rule on an abstraction the
+  example does not cover.
 - The passing object-agency rewrites keep the figure: "the absence is the
   name of the content to come" still calls an absence a name. No
   expectation checks whether a rewrite stays figurative, and no run
